@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Riya — Gallery</title>
+  <meta name="description" content="Riya's photo gallery — 1 to 63, pink lilies & roses theme, works offline. Includes folder picker if paths don't match." />
+  <style>
+    :root{ --bg:#0f0a12; --ink:#fff7fb; --muted:#eacfe3; --pink1:#ff77b7; --pink2:#ffb3d6; --lilac:#a78bfa; --shadow:rgba(0,0,0,.35); --radius:20px }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--ink);background:
+      radial-gradient(1200px 800px at 10% 120%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(1200px 800px at 80% -10%, rgba(255,143,184,.18), transparent 55%),
+      linear-gradient(180deg, #130c19 0%, #0f0a12 100%);
+    }
+    .wrap{width:min(1200px,94vw);margin-inline:auto}
+    header.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border-bottom:1px solid rgba(255,255,255,.12)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lilac));box-shadow:0 6px 20px var(--shadow);position:relative;overflow:hidden}
+    .brand .logo:before{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.65), rgba(255,255,255,0) 40%)}
+    nav ul{display:flex;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;border:1px solid transparent}
+    nav a:hover, nav a[aria-current="page"]{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+
+    .hero{padding:28px 0 12px}
+    .title{margin:6px 0 8px;font-size:clamp(28px,4.6vw,54px)}
+    .sub{color:var(--muted)}
+
+    .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:12px 0 18px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:var(--muted);font-size:13px}
+    .search{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:var(--ink)}
+    .search input{all:unset;width:160px}
+
+    .pick{display:flex;gap:10px;align-items:center}
+    .btn{appearance:none;border:0;cursor:pointer;border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.10);color:#fff}
+    .btn.primary{background:linear-gradient(135deg, var(--pink2), var(--lilac)); color:#160c23; font-weight:700}
+
+    .grid{display:grid;grid-template-columns:repeat( auto-fill, minmax(210px, 1fr) );gap:14px}
+    .tile{position:relative;border-radius:16px;overflow:hidden;background:#0a0a0a;border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 30px var(--shadow)}
+    .tile .frame{aspect-ratio:4/5;position:relative;background:#0b0b0f}
+    .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s ease}
+    .tile.loaded img{opacity:1}
+    .tile .cap{position:absolute;inset:auto 0 0 0;padding:8px 10px;background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55));font-size:12px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+    .lightbox{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.75);z-index:60}
+    .lb-inner{width:min(96vw,1200px)}
+    .lb-imgwrap{position:relative;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 20px 80px var(--shadow);border:1px solid rgba(255,255,255,.16)}
+    .lb-img{max-height:82vh;width:100%;object-fit:contain;display:block}
+    .lb-bar{display:flex;align-items:center;justify-content:space-between;padding:10px;color:#fff}
+    .ico{width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);display:grid;place-items:center;cursor:pointer}
+
+    .debug{margin-top:10px;color:#9fb0d8;font-size:12px;word-break:break-all}
+    footer{color:var(--muted);text-align:center;font-size:12px;padding:28px 0 36px}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><div class="logo" aria-hidden="true"></div> <span>For Riya</span></div>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html" aria-current="page">Riya Gallery</a></li>
+          <li><a href="games/decorator.html">Room Decorator</a></li>
+          <li><a href="games/bouquet.html">Build‑a‑Bouquet</a></li>
+          <li><a href="games/organize.html">Organization Puzzle</a></li>
+          <li><a href="games/avatar.html">Character Creator</a></li>
+          <li><a href="day.html">Image & Message</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1 class="title">Riya Gallery</h1>
+      <p class="sub">All photos arranged <em>1 → 63</em>. If nothing shows, use the <strong>Select folder</strong> button below to point this page to your <code>demo</code> folder.</p>
+      <div class="controls">
+        <div class="pill"><span id="stat">Photos: 0</span></div>
+        <label class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="q" placeholder="Jump to # (1–63)" inputmode="numeric" />
+        </label>
+        <div class="pick">
+          <input type="file" id="picker" webkitdirectory directory multiple accept="image/*" hidden />
+          <button class="btn primary" id="pickBtn">Select “demo” folder</button>
+        </div>
+      </div>
+      <div class="debug" id="debug">debug: waiting…</div>
+    </section>
+
+    <section class="grid" id="grid" aria-live="polite" aria-busy="true"></section>
+  </main>
+
+  <!-- Lightbox -->
+  <section class="lightbox" id="lb" aria-hidden="true" role="dialog">
+    <div class="lb-inner">
+      <div class="lb-imgwrap">
+        <img id="lbimg" class="lb-img" alt="Riya photo" />
+        <div class="lb-bar">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="ico" id="prev" title="Previous (←)">◀</div>
+            <div class="ico" id="next" title="Next (→)">▶</div>
+            <div id="lbcnt" style="opacity:.8">– / –</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <a class="ico" id="download" download title="Download">⬇</a>
+            <div class="ico" id="close" title="Close (Esc)">✕</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Pink lilies & roses • Offline-ready • <span id="ver">v1.1 (folder‑picker)</span></footer>
+
+  <script>
+    // ---- CONFIG ----
+    const TOTAL = 63;
+    const DIRS  = ['./demo/','demo/','./Demo/','../demo/','./']; // try several relative spots
+    const EXTS  = ['.jpg','.jpeg','.png','.webp','.JPG','.JPEG','.PNG','.WEBP'];
+
+    const grid = document.getElementById('grid');
+    const stat = document.getElementById('stat');
+    const q = document.getElementById('q');
+    const dbg = document.getElementById('debug');
+
+    const lb = document.getElementById('lb');
+    const lbimg = document.getElementById('lbimg');
+    const lbcnt = document.getElementById('lbcnt');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const closeBtn = document.getElementById('close');
+    const dl = document.getElementById('download');
+
+    const picker = document.getElementById('picker');
+    const pickBtn = document.getElementById('pickBtn');
+
+    // file-mode variables
+    let fileMode = false;
+    const fileMap = new Map(); // num => File
+
+    pickBtn.addEventListener('click', ()=> picker.click());
+    picker.addEventListener('change', ()=>{
+      fileMap.clear();
+      for (const f of picker.files) {
+        const m = f.name.match(/^(\d{1,3})\.(jpg|jpeg|png|webp)$/i);
+        if (!m) continue;
+        const n = parseInt(m[1], 10);
+        if (n>=1 && n<=TOTAL) fileMap.set(n, f);
+      }
+      if (fileMap.size) {
+        fileMode = true;
+        dbg.textContent = `debug: using picked folder (found ${fileMap.size} images)`;
+        rebuild();
+      } else {
+        dbg.textContent = 'debug: no images recognized in that folder (expect 1.jpg … 63.jpg)';
+      }
+    });
+
+    function tileTemplate(i){
+      const fig = document.createElement('figure'); fig.className = 'tile'; fig.dataset.index = i;
+      const frame = document.createElement('div'); frame.className = 'frame';
+      const img = document.createElement('img'); img.alt = `Riya photo ${i}`; img.loading='lazy'; img.decoding='async';
+      frame.appendChild(img);
+      const cap = document.createElement('figcaption'); cap.className='cap'; cap.textContent = `Photo ${i}`; 
+      fig.appendChild(frame); fig.appendChild(cap); return fig;
+    }
+
+    function tryLoad(url){
+      return new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(url); im.onerror=()=>rej(url); im.src=url; });
+    }
+
+    async function resolveFromDisk(i){
+      const f = fileMap.get(i); if (!f) throw new Error('not in picked folder');
+      return URL.createObjectURL(f);
+    }
+
+    async function resolveRelative(i){
+      const attempts = [];
+      for (const dir of DIRS){
+        const base = dir + i;
+        for (const ext of EXTS){ const url = base + ext; attempts.push(url); try { return await tryLoad(url); } catch(_){}}
+      }
+      throw new Error('Missing image '+i+' (tried '+attempts.join(', ')+')');
+    }
+
+    async function resolve(i){
+      if (fileMode) return resolveFromDisk(i);
+      return resolveRelative(i);
+    }
+
+    // Lazy load using IntersectionObserver
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(async (en)=>{
+        if(!en.isIntersecting) return;
+        const tile = en.target; io.unobserve(tile);
+        const i = +tile.dataset.index; const img = tile.querySelector('img');
+        try{ const src = await resolve(i); img.src = src; tile.classList.add('loaded'); }
+        catch(e){ img.alt = `Missing image ${i}`; dbg.textContent = 'debug: '+ e.message; }
+      });
+    },{ rootMargin: '120px 0px' });
+
+    function rebuild(){
+      grid.innerHTML = '';
+      for(let i=1;i<=TOTAL;i++){ const t = tileTemplate(i); grid.appendChild(t); io.observe(t); }
+      stat.textContent = `Photos: ${TOTAL}`; grid.setAttribute('aria-busy','false');
+    }
+
+    // Lightbox helpers
+    let current = 1;
+    function openLB(i){ current = Math.min(Math.max(i,1), TOTAL); updateLB(); lb.style.display='grid'; lb.setAttribute('aria-hidden','false'); }
+    function closeLB(){ lb.style.display='none'; lb.setAttribute('aria-hidden','true'); }
+
+    async function updateLB(){
+      lbcnt.textContent = `${current} / ${TOTAL}`;
+      try { const src = await resolve(current); lbimg.src = src; dl.href = src; dl.download = `riya_${current}`; }
+      catch(e){ lbimg.removeAttribute('src'); dbg.textContent = 'debug: '+ e.message; }
+    }
+
+    grid.addEventListener('click', (e)=>{ const fig = e.target.closest('.tile'); if(!fig) return; openLB(+fig.dataset.index); });
+    prevBtn.addEventListener('click', ()=>{ if(current>1){ current--; updateLB(); }});
+    nextBtn.addEventListener('click', ()=>{ if(current<TOTAL){ current++; updateLB(); }});
+    closeBtn.addEventListener('click', closeLB);
+    lb.addEventListener('click', (e)=>{ if(e.target===lb) closeLB(); });
+    window.addEventListener('keydown', (e)=>{ if(lb.getAttribute('aria-hidden')==='true') return; if(e.key==='Escape') closeLB(); if(e.key==='ArrowLeft'&&current>1){current--; updateLB();} if(e.key==='ArrowRight'&&current<TOTAL){current++; updateLB();}});
+
+    // Jump box
+    q.addEventListener('change', ()=>{ const v = parseInt(q.value,10); if(!Number.isFinite(v)) return; openLB(Math.min(Math.max(v,1), TOTAL)); });
+
+    // Initial build
+    rebuild();
+    dbg.textContent = 'debug: trying relative paths like ./demo/1.jpg then .jpeg/.png/.webp. If blank, click \"Select folder\".';
+  </script>
+</body>
+</html>

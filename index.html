@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>For Riya — Birthday Countdown</title>
+  <meta name="description" content="Exact countdown to Oct 15 at 00:00 Asia/Kathmandu (UTC+5:45). Petal animation, luxe card UI. Works offline." />
+  <style>
+    :root{ --bg:#0f0a12; --ink:#fff7fb; --muted:#eacfe3; --pink1:#ff77b7; --pink2:#ffb3d6; --lilac:#a78bfa; --ring:#f7d3e9; --shadow:0 20px 60px rgba(0,0,0,.45); --radius:26px; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:
+      radial-gradient(1400px 900px at 12% 115%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(1200px 800px at 85% -12%, rgba(255,143,184,.18), transparent 55%),
+      linear-gradient(180deg,#130c19 0%, #0f0a12 100%);
+    }
+    .wrap{width:min(1200px,95vw);margin-inline:auto}
+    header.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-bottom:1px solid rgba(255,255,255,.12)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lilac));box-shadow:0 6px 20px rgba(0,0,0,.35)}
+    nav ul{display:flex;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;border:1px solid transparent}
+    nav a:hover, nav a[aria-current="page"]{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+
+    main{padding:30px 0 40px}
+
+    .hero{position:relative;max-width:1040px;margin-inline:auto}
+    .card{position:relative;overflow:hidden;
+      /* darker, high-contrast card */
+      background: rgba(22,16,29,.78);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px;
+      color:#fff;
+    }
+    .ring{position:absolute;inset:0;pointer-events:none}
+    .ring:before{content:"";position:absolute;inset:-40px;background:
+      radial-gradient(650px 220px at 20% 10%, rgba(255,224,240,.18), transparent 65%),
+      radial-gradient(480px 260px at 90% 80%, rgba(206,178,255,.16), transparent 65%);
+      filter:none;opacity:.55}
+
+    h1{margin:8px 0 8px;font-size:56px;font-weight:900;letter-spacing:.2px;color:#fff}
+    p.lead{color:#ffe6f2;margin:0 0 22px;max-width:46ch}
+
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+    .tile{position:relative;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:22px;display:grid;place-items:center;padding:18px 10px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+    .num{font-size:84px;font-weight:900;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+    .lab{color:#dfe5ff;letter-spacing:.16em;font-size:12px;margin-top:6px}
+
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
+    .btn{appearance:none;border:0;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#160c23}
+    .btn.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.18)}
+    .muted{color:#cbd3ff;font-size:12px;margin-top:10px}
+
+    /* petals */
+    #petals{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.9}
+    .card > *{position:relative;z-index:2}
+    .toggle{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .toggle input{accent-color:#ffb3d6}
+
+    @media (prefers-reduced-motion: reduce){ #petals{display:none} }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><div class="logo"></div><span>For Riya</span></div>
+      <nav>
+        <ul>
+          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li><a href="gallery.html">Riya Gallery</a></li>
+          <li><a href="games/decorator.html">Room Decorator</a></li>
+          <li><a href="games/bouquet.html">Build‑a‑Bouquet</a></li>
+          <li><a href="games/organize.html">Organization Puzzle</a></li>
+          <li><a href="games/avatar.html">Character Creator</a></li>
+          <li><a href="day.html">Image & Message</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="card">
+        <canvas id="petals" width="1200" height="520" aria-hidden="true"></canvas>
+        <div class="ring" aria-hidden="true"></div>
+        <h1>Riya’s Birthday Countdown</h1>
+        <p class="lead">Pink lilies, soft roses, and a timer that keeps perfect Nepal time. We’re counting down to your day. 💗</p>
+        <div class="grid">
+          <div class="tile"><div id="d" class="num">—</div><div class="lab">DAYS</div></div>
+          <div class="tile"><div id="h" class="num">—</div><div class="lab">HOURS</div></div>
+          <div class="tile"><div id="m" class="num">—</div><div class="lab">MINUTES</div></div>
+          <div class="tile"><div id="s" class="num">—</div><div class="lab">SECONDS</div></div>
+        </div>
+        <div class="row">
+          <button class="btn" onclick="location.href='day.html'">See today’s image & message</button>
+          <button class="btn ghost" onclick="location.href='gallery.html'">Open Riya Gallery</button>
+          <label class="toggle small"><input type="checkbox" id="petalToggle" checked> petals on</label>
+        </div>
+        <p class="muted" id="tzline">Time zone: Nepal (Asia/Kathmandu) —</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== NEPAL time helpers (UTC+05:45 fixed)
+    const NPT_OFFSET_MS = (5*60 + 45) * 60 * 1000; // 20700000 ms
+    const TARGET_MONTH = 9; // October (0-index)
+    const TARGET_DAY   = 15; // 15th
+
+    function nowNepalMs(){ return Date.now() + NPT_OFFSET_MS; }
+    function nepParts(ms){ const d=new Date(ms); return { y:d.getUTCFullYear(), m:d.getUTCMonth(), d:d.getUTCDate(), hh:d.getUTCHours(), mm:d.getUTCMinutes(), ss:d.getUTCSeconds() }; }
+    function upcomingTargetUtc(){
+      const n = nepParts(nowNepalMs());
+      const startToday = Date.UTC(n.y,n.m,n.d) - NPT_OFFSET_MS; // today 00:00 NPT (UTC ms)
+      const targetThis = Date.UTC(n.y, TARGET_MONTH, TARGET_DAY) - NPT_OFFSET_MS; // Oct 15 00:00 NPT this year
+      // if today (in NPT) is after Oct15, count to next year's Oct15
+      return (startToday > targetThis) ? (Date.UTC(n.y+1, TARGET_MONTH, TARGET_DAY) - NPT_OFFSET_MS) : targetThis;
+    }
+
+    function left(){
+      const t = upcomingTargetUtc();
+      const diff = Math.max(0, t - Date.now());
+      const total = Math.floor(diff/1000);
+      const days = Math.floor(total/86400);
+      const hrs  = Math.floor((total%86400)/3600);
+      const mins = Math.floor((total%3600)/60);
+      const secs = total%60;
+      return {days,hrs,mins,secs};
+    }
+
+    const dEl=document.getElementById('d'), hEl=document.getElementById('h'), mEl=document.getElementById('m'), sEl=document.getElementById('s');
+    const tzline=document.getElementById('tzline');
+    function pad(n){ return String(n).padStart(2,'0'); }
+
+    function tick(){
+      const {days,hrs,mins,secs} = left();
+      dEl.textContent=days; hEl.textContent=pad(hrs); mEl.textContent=pad(mins); sEl.textContent=pad(secs);
+      const np = nepParts(nowNepalMs());
+      tzline.textContent = `Time zone: Nepal (Asia/Kathmandu) — ${np.y}-${pad(np.m+1)}-${pad(np.d)} ${pad(np.hh)}:${pad(np.mm)}:${pad(np.ss)}  •  Switches at Nepal midnight ✨`;
+    }
+    tick(); setInterval(tick, 1000);
+
+    // ===== Pretty petals (Canvas)
+    const canvas = document.getElementById('petals');
+    const ctx = canvas.getContext('2d');
+    function resize(){ const r = canvas.getBoundingClientRect(); canvas.width = Math.max(600, Math.floor(r.width*devicePixelRatio)); canvas.height = Math.max(240, Math.floor(r.height*devicePixelRatio)); }
+    const petals=[]; const MAX=64; let run=true;
+    function spawn(){ if(petals.length>=MAX) return; petals.push({ x:Math.random()*canvas.width, y:-40, r:12+Math.random()*12, t:Math.random()*Math.PI*2, vx:(Math.random()-.5)*0.5, vy: 0.9+Math.random()*1.1, rot:Math.random()*Math.PI*2, vr:(Math.random()-.5)*0.025 }); }
+    function drawPetal(p){ const x=p.x, y=p.y, r=p.r; ctx.save(); ctx.translate(x,y); ctx.rotate(p.rot); ctx.scale(devicePixelRatio, devicePixelRatio); const g = ctx.createLinearGradient(-r,-r,r,r); g.addColorStop(0,'rgba(255,179,214,.95)'); g.addColorStop(1,'rgba(167,139,250,.95)'); ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(0,-r); ctx.quadraticCurveTo(r, -r*0.2, 0, r); ctx.quadraticCurveTo(-r, -r*0.2, 0, -r); ctx.closePath(); ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=10; ctx.fill(); ctx.restore(); }
+    function step(){ if(!run) return; ctx.clearRect(0,0,canvas.width,canvas.height); if(Math.random()<0.5) spawn(); petals.forEach(p=>{ p.t+=0.012; p.x += p.vx*devicePixelRatio + Math.sin(p.t)*0.6; p.y += p.vy*devicePixelRatio; p.rot += p.vr; drawPetal(p); }); for(let i=petals.length-1;i>=0;i--){ if(petals[i].y>canvas.height+60) petals.splice(i,1); } requestAnimationFrame(step); }
+    resize(); new ResizeObserver(resize).observe(canvas); step();
+    document.getElementById('petalToggle').addEventListener('change', (e)=>{ run = e.target.checked; if(run){ step(); } else { ctx.clearRect(0,0,canvas.width,canvas.height); } });
+  </script>
+</body>
+</html>

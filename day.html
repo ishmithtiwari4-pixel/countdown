@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>For Riya — Image & Message of the Day</title>
+  <meta name="description" content="Shows today's photo and message. Auto‑switches exactly at 00:00 Asia/Kathmandu (UTC+5:45). Works offline." />
+  <style>
+    :root{ --bg:#0f0a12; --ink:#fff7fb; --muted:#eacfe3; --pink1:#ff77b7; --pink2:#ffb3d6; --lilac:#a78bfa; --shadow:0 18px 50px rgba(0,0,0,.35); --radius:20px; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:
+      radial-gradient(1200px 800px at 12% 115%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(1200px 800px at 85% -12%, rgba(255,143,184,.18), transparent 55%),
+      linear-gradient(180deg, #130c19 0%, #0f0a12 100%);
+    }
+    .wrap{width:min(1200px,95vw);margin-inline:auto}
+    header.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-bottom:1px solid rgba(255,255,255,.12)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lilac));box-shadow:0 6px 20px rgba(0,0,0,.35)}
+    nav ul{display:flex;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;border:1px solid transparent}
+    nav a:hover, nav a[aria-current="page"]{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+
+    main{padding:18px}
+    .hero{display:grid;grid-template-columns: 1.2fr 1fr; gap:18px}
+    @media (max-width:980px){ .hero{grid-template-columns:1fr;}}
+
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+    .photoWrap{position:relative;border-radius:16px;overflow:hidden;min-height:420px;display:grid;place-items:center}
+    .photoWrap img{max-width:100%;max-height:70vh;object-fit:contain;display:block}
+    .badge{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);padding:6px 10px;border-radius:999px;font-weight:700}
+    .rose{position:absolute;right:-30px;bottom:-20px;opacity:.35;filter:blur(0.2px)}
+
+    h1{margin:6px 0 2px;font-size:22px}
+    .meta{color:#cbd3ff;font-size:12px}
+    .msg{font-size:18px;line-height:1.45;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);padding:16px;border-radius:14px;margin-top:10px}
+
+    .count{display:flex;gap:16px;flex-wrap:wrap;color:#cfd6ff;margin-top:10px}
+    .count b{color:#fff}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><div class="logo"></div><span>For Riya</span></div>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Riya Gallery</a></li>
+          <li><a href="games/decorator.html">Room Decorator</a></li>
+          <li><a href="games/bouquet.html">Build‑a‑Bouquet</a></li>
+          <li><a href="games/organize.html">Organization Puzzle</a></li>
+          <li><a href="games/avatar.html">Character Creator</a></li>
+          <li><a href="day.html" aria-current="page">Image & Message</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="card">
+        <div class="photoWrap">
+          <div class="badge" id="dayBadge">Day —</div>
+          <img id="photo" alt="today's photo" />
+          <!-- subtle floral svg -->
+          <svg class="rose" width="220" height="220" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+            <circle cx="100" cy="100" r="90" stroke="rgba(255,255,255,.18)" stroke-width="2" />
+            <path d="M100 40c26 0 44 18 44 42 0 34-32 52-44 78-12-26-44-44-44-78 0-24 18-42 44-42z" fill="#ffb3d6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card" style="display:grid;align-content:start;padding:18px">
+        <h1 id="title">Image & Message of the Day</h1>
+        <div class="meta" id="when">Kathmandu time —</div>
+        <div class="msg" id="message">Loading message…</div>
+        <div class="count" id="count"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ====== CONFIG
+    const TZ_OFFSET_MIN = 5*60 + 45;            // Asia/Kathmandu has fixed UTC+05:45, no DST
+    const NPT_MS = TZ_OFFSET_MIN * 60 * 1000;   // offset in ms
+    const TARGET_MONTH = 9;  // October (0-indexed)
+    const TARGET_DAY   = 15; // 15th
+
+    // Where your photos live relative to day.html.
+    // We'll try both the root and /games, and many extensions.
+    const DIRS = ['./', './games/'];
+    const EXTS = ['jpg','jpeg','png','webp','JPG','JPEG','PNG','WEBP','jfif','JFIF'];
+    const MAX_PHOTOS = 63;  // you said 1..63
+
+    // Messages (Day 65 .. Day 1). Day 0 handled separately (birthday).
+    const MSG = {
+      65: "Thank God for those Yashu Yashu memes on Instagram 🤝 Without them, who knows if we’d even be friends!",
+      64: "It’s wild how pain found pain… and somehow, we just clicked 💫",
+      63: "You were in a bigger mess than me, but you still made space for my nonsense 💛",
+      62: "You’re short. Like… really short 📏 (don’t fight me).",
+      61: "Cutest of them all ✨ (Don’t get used to me saying it).",
+      60: "You get mad for no reason sometimes 😤 (same here — satti batti).",
+      59: "You roll your eyes like it’s your favorite hobby 🙄",
+      58: "You post pics with me 📸 and get mad when I don’t react “correctly” 😂",
+      57: "You once took like 30 photos in one go. Still not satisfied 😏",
+      56: "You think you’re funny… but your jokes are broken 🫠 (still like them tho).",
+      55: "You have “random roast” mode that comes out of nowhere 🔥",
+      54: "You’re low-key competitive 🏁 and I live for it.",
+      53: "You laugh at your own mistakes 😅",
+      52: "You share snacks 🍫 (even when you threaten not to).",
+      51: "You once gave advice that actually worked 🤯",
+      50: "You’ll point out if I have food on my face… politely 😂",
+      49: "You celebrate tiny wins 🎉",
+      48: "You’re cool with inside jokes that last forever 🫡",
+      47: "That trip we talked about? Let’s make it happen someday ✈️",
+      46: "Before I’m Rancho, I’m your bestest friend. Always 🤞",
+      45: "You laugh with your whole face 😄",
+      44: "Your smile makes the room brighter 🌤️",
+      43: "You remember small details from conversations 📝",
+      42: "You make people feel truly heard 👂",
+      41: "Your timing for jokes? Immaculate 🎯",
+      40: "You listen without interrupting 🫢",
+      39: "You make awkward silences comfortable ☕",
+      38: "Your “hmm” is oddly satisfying 🤔",
+      37: "You notice when someone’s off and check in 🩷",
+      36: "You don’t fake-laugh — if it’s funny, you laugh 😂",
+      35: "You notice even small changes, like a haircut 💇‍♀️",
+      34: "You make group settings less tense 🤝",
+      33: "You see beauty in small, random things 🌸",
+      32: "You’ve got a playlist for every mood 🎶",
+      31: "You make people feel like their opinions matter 💬",
+      30: "You never pretend to know everything 📖",
+      29: "You remember my favorite drink 🥤",
+      28: "You point out good weather 🌈",
+      27: "You drop topics when they need to be dropped 🫢",
+      26: "You send perfectly-timed memes 📲",
+      25: "You make eye contact when you talk 👀",
+      24: "Your voice gets calm when things get stressful 🪷",
+      23: "You tell stories that actually keep me hooked 📖",
+      22: "You’re not afraid to be silly 🤪",
+      21: "You say “thank you” and mean it 💐",
+      20: "You never forget birthdays 🎂",
+      19: "You never let disagreements get personal 💭",
+      18: "You’re always up for trying something new ✨",
+      17: "You help without making people feel like a burden 🤍",
+      16: "You have that rare “comfort to be around” vibe 🛋️",
+      15: "You’ve helped me more than you realize 📚",
+      14: "You forgive even when it’s hard — and I know because I’ve been one of those people 🙈",
+      13: "You’ve been through things and still smile like you own the light ☀️",
+      12: "You’re one of the strongest people I know 🏆",
+      11: "You make life feel a little lighter, just by being in it 💫",
+      10: "You’re kind in a way the world needs more of 💛",
+       9: "You’ve been the best gift God’s ever given me 🎁",
+       8: "You make dreams feel possible 🚀",
+       7: "You’re proof that good people still exist 🤍",
+       6: "You’re someone I’ll always root for, no matter what 📣",
+       5: "You’re more important than you probably realize 🌻",
+       4: "You’ve made these 65 days worth it already 🌟",
+       3: "I couldn’t imagine this year without you 🌙",
+       2: "Tomorrow’s your day — but you’ve been worth celebrating every day 💐",
+       1: "Happy Birthday Eve 🥳 I’ve been celebrating you for 65 days."
+    };
+
+    const BDAY_MSG = "Happy Birthday, Riya! 🎉💖 May this year be so, so kind to you. Thank you for being you.";
+
+    // ====== helpers for Nepal time math
+    function nowNepalMs(){ return Date.now() + NPT_MS; }
+    function nepParts(ms){ const d=new Date(ms); return { y:d.getUTCFullYear(), m:d.getUTCMonth(), d:d.getUTCDate(), hh:d.getUTCHours(), mm:d.getUTCMinutes(), ss:d.getUTCSeconds() }; }
+    function todayNepalStartUtcMs(){ const n=nepParts(nowNepalMs()); return Date.UTC(n.y,n.m,n.d) - NPT_MS; }
+    function nextNepalMidnightUtcMs(){ const n=nepParts(nowNepalMs()); return Date.UTC(n.y,n.m,n.d+1) - NPT_MS; }
+    function upcomingBirthdayUtcMs(){
+      const n = nepParts(nowNepalMs());
+      let y = n.y; const targetThisUtc = Date.UTC(y, TARGET_MONTH, TARGET_DAY) - NPT_MS; // NPT midnight of Oct 15 in UTC ms
+      if (todayNepalStartUtcMs() > targetThisUtc) y++; // if already past in NPT, use next year
+      return Date.UTC(y, TARGET_MONTH, TARGET_DAY) - NPT_MS;
+    }
+
+    function daysUntilBirthday(){
+      const start = todayNepalStartUtcMs();
+      const target = upcomingBirthdayUtcMs();
+      const diff = Math.floor((target - start) / (24*60*60*1000));
+      return diff; // 0 = today (birthday), 1..n = days remaining
+    }
+
+    // choose photo number 1..63 by cycling
+    function photoForDay(days){ // days = 0..∞ (0 = birthday)
+      if (days <= 0) return 1; // special photo for birthday
+      return ((days - 1) % MAX_PHOTOS) + 1;
+    }
+
+    function setPhoto(imgEl, num){
+      // try DIRS × EXTS until one works
+      imgEl.dataset.try = '0'; // index over combinations
+      const combos = [];
+      for (const d of DIRS){ for (const e of EXTS){ combos.push([d, e]); } }
+      function setSrc(i){ if(i>=combos.length){ return; } const [dir,ext] = combos[i]; imgEl.src = dir + num + '.' + ext + '?v=' + Date.now(); imgEl.alt = 'photo ' + num; }
+      imgEl.onerror = ()=>{ const i = (+imgEl.dataset.try)+1; imgEl.dataset.try = String(i); setSrc(i); };
+      setSrc(0);
+    }
+
+    // render
+    const elPhoto = document.getElementById('photo');
+    const elMsg   = document.getElementById('message');
+    const elWhen  = document.getElementById('when');
+    const elBadge = document.getElementById('dayBadge');
+    const elCount = document.getElementById('count');
+
+    let cachedDay = null; // days until birthday at NPT 00:00 today
+
+    function render(){
+      const days = daysUntilBirthday();
+      cachedDay = days;
+      // Day label
+      if (days > 0){ elBadge.textContent = 'Day ' + days; }
+      else { elBadge.textContent = 'BIRTHDAY ✨'; }
+      // Message
+      elMsg.textContent = days === 0 ? BDAY_MSG : (MSG[days] || `Counting down… ${days} day(s) left`);
+      // Photo
+      const num = photoForDay(days);
+      setPhoto(elPhoto, num);
+      // Meta and counters
+      const np = nepParts(nowNepalMs());
+      elWhen.textContent = `Kathmandu time — ${String(np.y)}-${String(np.m+1).padStart(2,'0')}-${String(np.d).padStart(2,'0')} ${String(np.hh).padStart(2,'0')}:${String(np.mm).padStart(2,'0')}`;
+      const targetMs = upcomingBirthdayUtcMs();
+      const daysLeft = Math.max(0, Math.floor((targetMs - todayNepalStartUtcMs()) / 86400000));
+      elCount.innerHTML = `Days left to 15 Oct: <b>${daysLeft}</b> • Switches at next NPT midnight in <span id="eta">…</span>`;
+      tickETA();
+    }
+
+    function tickETA(){
+      const eta = document.getElementById('eta'); if(!eta) return;
+      function pad(n){ return String(n).padStart(2,'0'); }
+      const next = nextNepalMidnightUtcMs();
+      const t = Math.max(0, next - Date.now());
+      const h = Math.floor(t/3600000), m = Math.floor((t%3600000)/60000), s = Math.floor((t%60000)/1000);
+      eta.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+
+    // exact switch at 00:00 NPT
+    function scheduleMidnightSwitch(){
+      const delay = Math.max(1000, nextNepalMidnightUtcMs() - Date.now() + 50);
+      setTimeout(()=>{ render(); scheduleMidnightSwitch(); }, delay);
+    }
+
+    // backup minute check (in case of sleep/tab restore)
+    setInterval(()=>{
+      tickETA();
+      const d = daysUntilBirthday();
+      if(d !== cachedDay){ render(); }
+    }, 60000);
+
+    // initial
+    render();
+    scheduleMidnightSwitch();
+  </script>
+</body>
+</html>
