@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Riya — Room Decorator (Safe‑Mode)</title>
+  <meta name="description" content="Drag‑and‑drop room decorator. Simple, robust, offline. Rotate: Shift+Wheel • Scale: Alt+Wheel • Export PNG." />
+  <style>
+    :root{ --bg:#0f0a12; --ink:#fff7fb; --muted:#eacfe3; --pink2:#ffb3d6; --lilac:#a78bfa; --shadow:rgba(0,0,0,.35); --radius:20px; --grid: rgba(255,255,255,.06); }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--ink);background:
+      radial-gradient(1200px 800px at 10% 120%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(1200px 800px at 80% -10%, rgba(255,143,184,.18), transparent 55%),
+      linear-gradient(180deg, #130c19 0%, #0f0a12 100%);
+    }
+    .wrap{width:min(1200px,95vw);margin-inline:auto}
+    header.nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(12px);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border-bottom:1px solid rgba(255,255,255,.12)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lilac));box-shadow:0 6px 20px var(--shadow);position:relative;overflow:hidden}
+    .brand .logo:before{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.65), rgba(255,255,255,0) 40%)}
+    nav ul{display:flex;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;border:1px solid transparent}
+    nav a:hover, nav a[aria-current="page"]{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+
+    .layout{display:grid;grid-template-columns: 280px 1fr; gap:16px; padding:18px}
+    @media (max-width:980px){ .layout{ grid-template-columns: 1fr; } }
+
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px;box-shadow:0 14px 40px var(--shadow)}
+    .panel h2{margin:0 0 8px;font-size:18px}
+    .palette{display:grid;grid-template-columns: 1fr 1fr; gap:10px}
+    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;display:grid;gap:8px;place-items:center}
+    .card svg{width:72px;height:72px}
+    .btn{appearance:none;border:0;cursor:pointer;border-radius:10px;padding:8px 10px;background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#160c23;font-weight:700}
+    .btn.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);font-weight:600}
+    .small{font-size:12px;color:var(--muted)}
+    .opts{display:grid;gap:8px;margin-top:12px}
+    .row{display:flex;gap:8px;align-items:center}
+    .row label{font-size:12px;color:var(--muted)}
+    .row input[type="color"]{width:36px;height:32px;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:transparent}
+
+    .stage-wrap{position:relative}
+    .toolbar{position:absolute;left:10px;top:10px;display:flex;gap:8px;z-index:20}
+    .tool{padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+    .tool:hover{background:rgba(255,255,255,.1)}
+
+    .stage{touch-action:none;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);box-shadow:0 14px 40px var(--shadow);overflow:hidden}
+    .status{margin-top:8px;color:#9fb0d8;font-size:12px}
+
+    .overlay{pointer-events:none}
+    .selbox{fill:transparent;stroke:#ff9ccf;stroke-width:2;stroke-dasharray:6 6}
+    .handle{fill:#fff;stroke:#333;stroke-width:1}
+    .debug{margin-top:8px;color:#9fb0d8;font-size:12px;word-break:break-all}
+
+    footer{color:var(--muted);text-align:center;font-size:12px;padding:10px 0 30px}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><div class="logo" aria-hidden="true"></div> <span>For Riya</span></div>
+      <nav>
+        <ul>
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../gallery.html">Riya Gallery</a></li>
+          <li><a href="decorator.html" aria-current="page">Room Decorator</a></li>
+          <li><a href="bouquet.html">Build‑a‑Bouquet</a></li>
+          <li><a href="organize.html">Organization Puzzle</a></li>
+          <li><a href="avatar.html">Character Creator</a></li>
+          <li><a href="../day.html">Image & Message</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <aside class="panel">
+      <h2>Palette</h2>
+      <div class="palette" id="palette"></div>
+      <div class="opts">
+        <div class="row"><label>Room wall</label><input type="color" id="wallColor" value="#ffe6f2" /></div>
+        <div class="row"><label>Floor</label><input type="color" id="floorColor" value="#f4d7ff" /></div>
+        <div class="row"><label>Snap</label><input type="checkbox" id="snap" checked /> <span class="small">to 20px grid</span></div>
+        <div class="row"><button class="btn" id="exportBtn">Export PNG</button><button class="btn ghost" id="saveBtn">Save .room</button><input type="file" id="loadFile" accept="application/json" hidden /><button class="btn ghost" id="loadBtn">Load</button></div>
+        <div class="small">Drag items. Shift+Wheel = rotate, Alt+Wheel = scale. Arrows to nudge. Delete to remove.</div>
+      </div>
+      <div class="debug" id="debug">debug: ok</div>
+    </aside>
+
+    <section class="stage-wrap">
+      <div class="toolbar">
+        <button class="tool" id="undo">⟲ Undo</button>
+        <button class="tool" id="redo">⟳ Redo</button>
+        <button class="tool" id="dup">⧉ Duplicate</button>
+        <button class="tool" id="front">⬆ Bring Front</button>
+        <button class="tool" id="back">⬇ Send Back</button>
+        <button class="tool" id="del">✕ Delete</button>
+        <button class="tool" id="reset">↺ Reset</button>
+      </div>
+      <svg id="stage" class="stage" width="100%" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" aria-label="Room canvas" role="group">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M20 0 H0 V20" fill="none" stroke="var(--grid)" stroke-width="1" />
+          </pattern>
+        </defs>
+        <rect id="wall" x="0" y="0" width="1000" height="420" fill="#ffe6f2" />
+        <rect id="floor" x="0" y="420" width="1000" height="200" fill="#f4d7ff" />
+        <rect x="0" y="0" width="1000" height="620" fill="url(#grid)" opacity="0.4" />
+        <g id="items"></g>
+        <g id="overlay" class="overlay"></g>
+      </svg>
+      <div class="status" id="status">status: ready • v1.1 safe‑mode</div>
+    </section>
+  </main>
+
+  <footer>Room Decorator • Offline & simple • Works best if this file is at <code>games/decorator.html</code></footer>
+
+  <script>
+    // ===== basic utilities
+    const clamp = (n,a,b)=> Math.min(b, Math.max(a,n));
+    const uid = ()=>'id'+Math.random().toString(36).slice(2,9);
+    const dbg = (t)=> document.getElementById('debug').textContent = 'debug: ' + t;
+
+    // global error to debug panel
+    window.onerror = (m, s, l, c, e)=>{ dbg(m+' @'+s+':'+l); };
+    window.addEventListener('unhandledrejection', ev=>{ dbg('promise: '+ (ev.reason?.message||ev.reason)); });
+
+    // ===== SVG helpers
+    function g(attrs={}, children=[]) { const el = document.createElementNS('http://www.w3.org/2000/svg','g'); for(const k in attrs) el.setAttribute(k, attrs[k]); children.forEach(c=> el.appendChild(c)); return el; }
+    function el(tag, attrs={}){ const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+    const COLORS = { wood:'#c79a6d', cushion:'#ffd1dc', fabric:'#ffc2e0', leaf:'#89c37e', pot:'#e7b48c', metal:'#d9d9e6' };
+
+    function makeBed(){ const base=el('rect',{x:-120,y:-70,rx:16,ry:16,width:240,height:140,fill:COLORS.fabric,stroke:'#000','stroke-opacity':.1}); const head=el('rect',{x:-120,y:-88,width:240,height:18,fill:COLORS.wood,rx:6}); const p1=el('rect',{x:-100,y:-58,width:90,height:40,rx:10,fill:'#fff'}); const p2=el('rect',{x:10,y:-58,width:90,height:40,rx:10,fill:'#fff'}); return g({'data-type':'bed'},[base,head,p1,p2]); }
+    function makeSofa(){ const seat=el('rect',{x:-110,y:-35,width:220,height:70,rx:18,fill:COLORS.cushion}); const back=el('rect',{x:-120,y:-70,width:240,height:50,rx:20,fill:COLORS.cushion}); const a1=el('rect',{x:-140,y:-35,width:28,height:70,rx:14,fill:COLORS.cushion}); const a2=el('rect',{x:112,y:-35,width:28,height:70,rx:14,fill:COLORS.cushion}); return g({'data-type':'sofa'},[back,seat,a1,a2]); }
+    function makeDesk(){ const top=el('rect',{x:-120,y:-30,width:240,height:20,rx:4,fill:COLORS.wood}); const l1=el('rect',{x:-110,y:-10,width:10,height:60,fill:COLORS.metal}); const l2=el('rect',{x:100,y:-10,width:10,height:60,fill:COLORS.metal}); const sh=el('rect',{x:-80,y:10,width:160,height:12,rx:3,fill:COLORS.wood}); return g({'data-type':'desk'},[top,l1,l2,sh]); }
+    function makePlant(){ const pot=el('rect',{x:-16,y:30,width:32,height:26,rx:6,fill:COLORS.pot}); const leaf1=el('path',{d:'M-4,30 C-30,0 -20,-60 0,-10 C20,-60 30,0 4,30 Z',fill:COLORS.leaf}); const leaf2=el('path',{d:'M0,20 C-20,-10 -8,-50 0,-5 C8,-50 20,-10 0,20 Z',fill:'#78b96c'}); return g({'data-type':'plant'},[leaf1,leaf2,pot]); }
+    function makeLamp(){ const stem=el('rect',{x:-3,y:-60,width:6,height:90,fill:COLORS.metal}); const shade=el('path',{d:'M-30,-60 h60 l-12,40 h-36 z',fill:'#ffd1a8'}); const base=el('ellipse',{cx:0,cy:32,rx:18,ry:6,fill:COLORS.metal}); return g({'data-type':'lamp'},[stem,shade,base]); }
+    function makeFrame(){ const bg=el('rect',{x:-45,y:-35,width:90,height:70,fill:'#fff'}); const border=el('rect',{x:-50,y:-40,width:100,height:80,fill:'none',stroke:COLORS.wood,'stroke-width':8}); const art=el('circle',{cx:0,cy:0,r:16,fill:COLORS.pot}); return g({'data-type':'frame'},[bg,art,border]); }
+    function makeRug(){ const r=el('rect',{x:-130,y:-70,width:260,height:140,rx:20,ry:20,fill:'#ffd1dc'}); const p=el('rect',{x:-120,y:-60,width:240,height:120,rx:16,ry:16,fill:'#ffe6f2'}); return g({'data-type':'rug'},[r,p]); }
+    function makeTable(){ const top=el('ellipse',{cx:0,cy:0,rx:90,ry:50,fill:COLORS.wood}); const leg=el('rect',{x:-6,y:0,width:12,height:46,fill:COLORS.metal}); const foot=el('ellipse',{cx:0,cy:46,rx:26,ry:6,fill:COLORS.metal}); return g({'data-type':'table'},[top,leg,foot]); }
+
+    const PALETTE = [
+      {name:'Bed', icon: makeBed},
+      {name:'Sofa', icon: makeSofa},
+      {name:'Desk', icon: makeDesk},
+      {name:'Plant', icon: makePlant},
+      {name:'Lamp', icon: makeLamp},
+      {name:'Frame', icon: makeFrame},
+      {name:'Rug', icon: makeRug},
+      {name:'Table', icon: makeTable},
+    ];
+
+    const stage = document.getElementById('stage');
+    const itemsLayer = document.getElementById('items');
+    const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+
+    // build palette UI
+    const paletteEl = document.getElementById('palette');
+    for (const p of PALETTE) {
+      const card = document.createElement('div'); card.className='card';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('viewBox','-120 -90 240 180'); svg.appendChild(p.icon());
+      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Add '+p.name; btn.addEventListener('click', ()=> addItem(p.name));
+      const label = document.createElement('div'); label.className='small'; label.textContent=p.name;
+      card.appendChild(svg); card.appendChild(btn); card.appendChild(label); paletteEl.appendChild(card);
+    }
+
+    // background color controls
+    const wall = document.getElementById('wall');
+    const floor = document.getElementById('floor');
+    document.getElementById('wallColor').addEventListener('input', e=> wall.setAttribute('fill', e.target.value));
+    document.getElementById('floorColor').addEventListener('input', e=> floor.setAttribute('fill', e.target.value));
+
+    const snapChk = document.getElementById('snap');
+
+    // state
+    let state = { items: [] };
+    let selected = null;
+    let undoStack = [], redoStack = [];
+
+    function snapshot(){ try{ undoStack.push(JSON.stringify(state)); if(undoStack.length>80) undoStack.shift(); redoStack.length=0; }catch(e){ dbg('snapshot failed: '+e.message); } }
+
+    function addItem(type){ snapshot(); const id=uid(); const x=500+(Math.random()*120-60), y=320+(Math.random()*60-30); const r=0, s=1; state.items.push({id,type,x,y,r,s,z:Date.now()}); render(); select(id); }
+
+    function buildNode(it){ const map={Bed:makeBed,Sofa:makeSofa,Desk:makeDesk,Plant:makePlant,Lamp:makeLamp,Frame:makeFrame,Rug:makeRug,Table:makeTable}; const factory = map[it.type]||makeRug; const node=factory(); node.setAttribute('data-id', it.id); node.setAttribute('transform', `translate(${it.x} ${it.y}) rotate(${it.r}) scale(${it.s})`); node.style.cursor='grab'; node.addEventListener('pointerdown', pointerDown, {passive:false}); return node; }
+
+    function render(){ itemsLayer.innerHTML=''; const ordered=[...state.items].sort((a,b)=>a.z-b.z); for(const it of ordered) itemsLayer.appendChild(buildNode(it)); drawOverlay(); statusEl.textContent=`status: ${state.items.length} items • selected: ${selected||'none'}`; }
+
+    function findItem(id){ return state.items.find(x=>x.id===id); }
+    function select(id){ selected=id; drawOverlay(); }
+
+    function drawOverlay(){ overlay.innerHTML=''; if(!selected) return; try{ const node=itemsLayer.querySelector(`[data-id="${selected}"]`); if(!node) return; const bb=node.getBBox(); const t=node.getCTM(); const pts=[ new DOMPoint(bb.x,bb.y).matrixTransform(t), new DOMPoint(bb.x+bb.width,bb.y).matrixTransform(t), new DOMPoint(bb.x+bb.width,bb.y+bb.height).matrixTransform(t), new DOMPoint(bb.x,bb.y+bb.height).matrixTransform(t) ]; const minx=Math.min(...pts.map(p=>p.x)), miny=Math.min(...pts.map(p=>p.y)); const maxx=Math.max(...pts.map(p=>p.x)), maxy=Math.max(...pts.map(p=>p.y)); overlay.appendChild(el('rect',{x:minx,y:miny,width:maxx-minx,height:maxy-miny,class:'selbox'})); [[minx,miny],[maxx,miny],[maxx,maxy],[minx,maxy]].forEach(([hx,hy])=> overlay.appendChild(el('rect',{x:hx-5,y:hy-5,width:10,height:10,class:'handle'}))); }catch(e){ dbg('overlay: '+e.message); }
+    }
+
+    function pointerDown(e){ e.preventDefault(); const id=e.currentTarget.getAttribute('data-id'); select(id); const it=findItem(id); if(!it) return; const startX=e.clientX, startY=e.clientY; e.currentTarget.setPointerCapture(e.pointerId); e.currentTarget.style.cursor='grabbing'; const snap=()=> snapChk.checked?20:1; const off={ dx: it.x - clientToSvgX(startX), dy: it.y - clientToSvgY(startY) };
+      function onMove(ev){ const nx=clientToSvgX(ev.clientX)+off.dx; const ny=clientToSvgY(ev.clientY)+off.dy; it.x=Math.round(nx/snap())*snap(); it.y=Math.round(ny/snap())*snap(); updateNode(it); drawOverlay(); }
+      function onUp(){ try{ e.currentTarget.releasePointerCapture(e.pointerId); }catch(_){} e.currentTarget.style.cursor='grab'; window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); snapshot(); }
+      window.addEventListener('pointermove', onMove, {passive:false}); window.addEventListener('pointerup', onUp, {once:true});
+    }
+
+    function clientToSvgX(cx){ const pt=stage.createSVGPoint(); pt.x=cx; pt.y=0; return pt.matrixTransform(stage.getScreenCTM().inverse()).x; }
+    function clientToSvgY(cy){ const pt=stage.createSVGPoint(); pt.x=0; pt.y=cy; return pt.matrixTransform(stage.getScreenCTM().inverse()).y; }
+
+    function updateNode(it){ const node=itemsLayer.querySelector(`[data-id="${it.id}"]`); if(node) node.setAttribute('transform', `translate(${it.x} ${it.y}) rotate(${it.r}) scale(${it.s})`); }
+
+    // keyboard
+    window.addEventListener('keydown', (e)=>{ if(!selected) return; const it=findItem(selected); if(!it) return; const step=e.shiftKey?10:2; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault(); if(e.key==='ArrowUp'){ it.y-=step; } if(e.key==='ArrowDown'){ it.y+=step; } if(e.key==='ArrowLeft'){ it.x-=step; } if(e.key==='ArrowRight'){ it.x+=step; } if(e.key==='Delete'||e.key==='Backspace'){ delSelected(); return; } updateNode(it); drawOverlay(); });
+
+    // wheel modifiers
+    stage.addEventListener('wheel', (e)=>{ if(!selected) return; const it=findItem(selected); if(!it) return; if(e.shiftKey){ it.r=(it.r+(e.deltaY>0?5:-5))%360; updateNode(it); drawOverlay(); e.preventDefault(); } else if(e.altKey){ it.s=clamp(it.s+(e.deltaY>0?-0.05:0.05),0.4,2.2); updateNode(it); drawOverlay(); e.preventDefault(); } }, {passive:false});
+
+    // toolbar
+    document.getElementById('undo').onclick = ()=>{ if(!undoStack.length) return; const cur=JSON.stringify(state); redoStack.push(cur); const prev=undoStack.pop(); state=JSON.parse(prev); selected=null; render(); };
+    document.getElementById('redo').onclick = ()=>{ if(!redoStack.length) return; const cur=JSON.stringify(state); undoStack.push(cur); const next=redoStack.pop(); state=JSON.parse(next); selected=null; render(); };
+    document.getElementById('dup').onclick = ()=>{ if(!selected) return; const it=findItem(selected); snapshot(); const copy={...it,id:uid(),x:it.x+30,y:it.y+30,z:Date.now()}; state.items.push(copy); render(); select(copy.id); };
+    document.getElementById('front').onclick = ()=>{ if(!selected) return; const it=findItem(selected); snapshot(); it.z=Date.now(); render(); };
+    document.getElementById('back').onclick = ()=>{ if(!selected) return; const it=findItem(selected); snapshot(); it.z=0; render(); };
+    document.getElementById('del').onclick = delSelected;
+    document.getElementById('reset').onclick = ()=>{ init(true); };
+
+    function delSelected(){ if(!selected) return; snapshot(); state.items = state.items.filter(x=>x.id!==selected); selected=null; render(); }
+
+    // save/load
+    document.getElementById('saveBtn').addEventListener('click', ()=>{ try{ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='room.layout.json'; a.click(); }catch(e){ dbg('save: '+e.message); } });
+    const loadFile=document.getElementById('loadFile');
+    document.getElementById('loadBtn').addEventListener('click', ()=> loadFile.click());
+    loadFile.addEventListener('change', async ()=>{ const f=loadFile.files[0]; if(!f) return; try{ const txt=await f.text(); state=JSON.parse(txt); selected=null; render(); statusEl.textContent='status: layout loaded'; }catch(e){ statusEl.textContent='status: invalid file'; dbg('load: '+e.message); } });
+
+    // export PNG
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      try{
+        const svg = stage.cloneNode(true);
+        const ov = svg.querySelector('#overlay'); if(ov) ov.remove();
+        const data = new XMLSerializer().serializeToString(svg);
+        const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+        const img = new Image();
+        img.onload = ()=>{ const canvas=document.createElement('canvas'); canvas.width=1000; canvas.height=620; const ctx=canvas.getContext('2d'); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); const png=canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=png; a.download='riya_room.png'; a.click(); };
+        img.src = url;
+      }catch(e){ dbg('export: '+e.message); }
+    });
+
+    // init
+    function init(reset){
+      if(reset){ undoStack.length=0; redoStack.length=0; }
+      state.items = [
+        {id:uid(), type:'Rug', x:500, y:500, r:0, s:1.1, z:1},
+        {id:uid(), type:'Bed', x:250, y:350, r:0, s:1, z:2},
+        {id:uid(), type:'Sofa', x:720, y:360, r:0, s:1, z:3},
+        {id:uid(), type:'Lamp', x:860, y:350, r:0, s:1, z:4},
+        {id:uid(), type:'Plant', x:140, y:360, r:0, s:1, z:5},
+        {id:uid(), type:'Frame', x:500, y:160, r:0, s:1, z:6},
+        {id:uid(), type:'Table', x:520, y:420, r:0, s:1, z:7}
+      ];
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>

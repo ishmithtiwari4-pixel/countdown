@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Riya — Build‑a‑Bouquet</title>
+  <meta name="description" content="Make a beautiful bouquet: drag flowers, rotate, resize, recolor, choose a vase, add ribbon, export as PNG. Works offline." />
+  <style>
+    :root{ --bg:#0f0a12; --ink:#fff7fb; --muted:#eacfe3; --pink1:#ff77b7; --pink2:#ffb3d6; --lilac:#a78bfa; --shadow:rgba(0,0,0,.35); --radius:20px; --accent:#ff9ccf; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--ink);background:
+      radial-gradient(1200px 800px at 10% 120%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(1200px 800px at 80% -10%, rgba(255,143,184,.18), transparent 55%),
+      linear-gradient(180deg, #130c19 0%, #0f0a12 100%);
+    }
+    .wrap{width:min(1280px,95vw);margin-inline:auto}
+    header.nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(12px);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border-bottom:1px solid rgba(255,255,255,.12)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lilac));box-shadow:0 6px 20px var(--shadow);position:relative;overflow:hidden}
+    .brand .logo:before{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.65), rgba(255,255,255,0) 40%)}
+    nav ul{display:flex;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;border:1px solid transparent}
+    nav a:hover, nav a[aria-current="page"]{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+
+    .layout{display:grid;grid-template-columns: 300px 1fr; gap:16px; padding:18px}
+    @media (max-width:980px){ .layout{ grid-template-columns: 1fr; } }
+
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px;box-shadow:0 14px 40px var(--shadow)}
+    .panel h2{margin:0 0 10px;font-size:18px}
+    .small{font-size:12px;color:var(--muted)}
+    .btn{appearance:none;border:0;cursor:pointer;border-radius:10px;padding:8px 10px;background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#160c23;font-weight:700}
+    .btn.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);font-weight:600}
+    .grid2{display:grid;grid-template-columns:1fr 1fr; gap:10px}
+    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;display:grid;gap:8px;place-items:center}
+    .card svg{width:72px;height:72px}
+
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    .row label{font-size:12px;color:var(--muted)}
+    .row input[type="color"], .row select{height:32px;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.1);color:#fff;padding:0 8px}
+    .row input[type="number"]{width:80px;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.1);color:#fff;padding:6px 8px}
+
+    .stage-wrap{position:relative}
+    .toolbar{position:absolute;left:10px;top:10px;display:flex;gap:8px;z-index:20}
+    .tool{padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+    .tool:hover{background:rgba(255,255,255,.1)}
+
+    /* IMPORTANT: touch-action + user-select stop sticky dragging on touchpads/phones */
+    .stage{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);box-shadow:0 14px 40px var(--shadow);overflow:hidden;
+           touch-action:none; user-select:none}
+    .status{margin-top:8px;color:#9fb0d8;font-size:12px}
+
+    .overlay{pointer-events:none}
+    .selbox{fill:transparent;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 6}
+    .handle{fill:#fff;stroke:#333;stroke-width:1}
+
+    .debug{margin-top:8px;color:#9fb0d8;font-size:12px;word-break:break-all}
+
+    footer{color:var(--muted);text-align:center;font-size:12px;padding:10px 0 30px}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><div class="logo" aria-hidden="true"></div> <span>For Riya</span></div>
+      <nav>
+        <ul>
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../gallery.html">Riya Gallery</a></li>
+          <li><a href="decorator.html">Room Decorator</a></li>
+          <li><a href="bouquet.html" aria-current="page">Build‑a‑Bouquet</a></li>
+          <li><a href="organize.html">Organization Puzzle</a></li>
+          <li><a href="avatar.html">Character Creator</a></li>
+          <li><a href="../day.html">Image & Message</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <!-- Palette / options -->
+    <aside class="panel">
+      <h2>Flower Palette</h2>
+      <div class="grid2" id="palette"></div>
+
+      <h2 style="margin-top:12px">Vase & Ribbon</h2>
+      <div class="row"><label>Vase style</label>
+        <select id="vaseStyle">
+          <option value="round">Round</option>
+          <option value="tall">Tall</option>
+          <option value="heart">Heart</option>
+        </select>
+      </div>
+      <div class="row"><label>Vase color</label><input type="color" id="vaseColor" value="#ffd1dc" /></div>
+      <div class="row"><button class="btn" id="addRibbon">Tie Ribbon</button></div>
+
+      <h2 style="margin-top:12px">Selected Flower</h2>
+      <div class="row"><label>Petal color</label><input type="color" id="petalColor" value="#ff99cc" /></div>
+      <div class="row"><label>Center color</label><input type="color" id="centerColor" value="#ffe680" /></div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="exportBtn">Export PNG</button>
+        <button class="btn ghost" id="saveBtn">Save .bouquet</button>
+        <input type="file" id="loadFile" accept="application/json" hidden />
+        <button class="btn ghost" id="loadBtn">Load</button>
+      </div>
+      <div class="small">Tips: Drag flowers. Shift+Wheel = rotate, Alt+Wheel = scale. Arrow keys to nudge. Delete to remove. Ctrl/⌘+Z / Ctrl/⌘+Y for undo/redo.</div>
+      <div class="debug" id="debug">debug: ready</div>
+    </aside>
+
+    <!-- Stage -->
+    <section class="stage-wrap">
+      <div class="toolbar">
+        <button class="tool" id="undo">⟲ Undo</button>
+        <button class="tool" id="redo">⟳ Redo</button>
+        <button class="tool" id="dup">⧉ Duplicate</button>
+        <button class="tool" id="front">⬆ Front</button>
+        <button class="tool" id="back">⬇ Back</button>
+        <button class="tool" id="auto">✿ Auto‑Arrange</button>
+        <button class="tool" id="del">✕ Delete</button>
+      </div>
+      <svg id="stage" class="stage" width="100%" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" aria-label="Bouquet canvas" role="group">
+        <defs>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="rgba(0,0,0,.35)"/>
+          </filter>
+        </defs>
+        <!-- background table & backdrop -->
+        <rect x="0" y="0" width="1000" height="700" fill="transparent" />
+        <rect x="0" y="520" width="1000" height="180" fill="rgba(255,255,255,.05)" />
+
+        <!-- vase layer (behind flowers) -->
+        <g id="vaseLayer"></g>
+        <!-- stems (optional subtle lines) -->
+        <g id="stems" opacity="0.35"></g>
+        <!-- flowers layer -->
+        <g id="flowers" filter="url(#shadow)"></g>
+        <!-- overlay selection -->
+        <g id="overlay" class="overlay"></g>
+      </svg>
+      <div class="status" id="status">status: ready</div>
+    </section>
+  </main>
+
+  <footer>Build‑a‑Bouquet • Offline & shareable • <span id="ver">v1.1 (drop‑fix)</span></footer>
+
+  <script>
+    // ===== Utilities
+    const clamp = (n,a,b)=> Math.min(b, Math.max(a,n));
+    const uid = ()=>'id'+Math.random().toString(36).slice(2,9);
+    const dbg = (t)=> document.getElementById('debug').textContent = 'debug: ' + t;
+
+    // Global error -> debug panel
+    window.onerror = (m, s, l)=>{ dbg(m+' @'+s+':'+l); };
+    window.addEventListener('unhandledrejection', ev=>{ dbg('promise: '+ (ev.reason?.message||ev.reason)); });
+
+    // ===== SVG helpers
+    function g(attrs={}, children=[]) { const el = document.createElementNS('http://www.w3.org/2000/svg','g'); for(const k in attrs) el.setAttribute(k, attrs[k]); children.forEach(c=> el.appendChild(c)); return el; }
+    function el(tag, attrs={}){ const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+    // ===== Flowers (stylized)
+    function rose(p='#ff709d', c='#ffd1dc'){ const grp=g({ 'data-type':'rose' }); for(let i=0;i<8;i++){ const pet=el('ellipse',{cx:0,cy:0,rx:26,ry:16,fill:p,transform:`rotate(${i*22.5}) translate(18 0)`}); pet.classList.add('petal'); grp.appendChild(pet);} const bud=el('circle',{cx:0,cy:0,r:10,fill:c}); bud.classList.add('center'); grp.appendChild(bud); return grp; }
+    function lily(p='#ffd1e6', c='#ffe680'){ const grp=g({ 'data-type':'lily' }); for(let i=0;i<6;i++){ const pet=el('path',{d:'M0,-40 C10,-10 10,10 0,40 C-10,10 -10,-10 0,-40 Z', fill:p, transform:`rotate(${i*60})`}); pet.classList.add('petal'); grp.appendChild(pet);} const cen=el('circle',{cx:0,cy:0,r:8,fill:c}); cen.classList.add('center'); grp.appendChild(cen); return grp; }
+    function tulip(p='#ff8fb8', c='#ffe680'){ const grp=g({ 'data-type':'tulip' }); const bulb=el('path',{d:'M-20,10 Q0,-40 20,10 Q0,32 -20,10 Z', fill:p}); bulb.classList.add('petal'); grp.appendChild(bulb); const cen=el('circle',{cx:0,cy:6,r:5,fill:c}); cen.classList.add('center'); grp.appendChild(cen); return grp; }
+    function daisy(p='#ffffff', c='#ffc94d'){ const grp=g({ 'data-type':'daisy' }); for(let i=0;i<12;i++){ const pet=el('ellipse',{cx:0, cy:-26, rx:8, ry:18, fill:p, transform:`rotate(${i*30})`}); pet.classList.add('petal'); grp.appendChild(pet);} const cen=el('circle',{cx:0,cy:0,r:10,fill:c}); cen.classList.add('center'); grp.appendChild(cen); return grp; }
+    function greenery(){ const grp=g({ 'data-type':'greenery' }); const stem=el('rect',{x:-2,y:0,width:4,height:120,fill:'#6fbf73'}); for(let i=0;i<6;i++){ const leaf=el('path',{d:'M0,0 C-10,-10 -14,-28 0,-36 C14,-28 10,-10 0,0 Z',fill:'#7fcf83',transform:`translate(${i%2?8:-8},${-10 - i*18}) rotate(${i%2?40:-40})`}); leaf.classList.add('leaf'); grp.appendChild(leaf);} grp.appendChild(stem); return grp; }
+    function ribbon(color='#ff99cc'){ const grp=g({ 'data-type':'ribbon' }); const band=el('rect',{x:-80,y:-10,width:160,height:20,rx:10,fill:color}); const knot=el('circle',{cx:0,cy:0,r:10,fill:'#ff6fa8'}); const tailL=el('path',{d:'M-30,10 l-40,40 l40,-14 z', fill:color}); const tailR=el('path',{d:'M30,10 l40,40 l-40,-14 z', fill:color}); grp.appendChild(band); grp.appendChild(knot); grp.appendChild(tailL); grp.appendChild(tailR); return grp; }
+
+    // Vases
+    function vaseRound(color='#ffd1dc'){ const grp=g({ 'data-type':'vase' }); const body=el('ellipse',{cx:0, cy:615, rx:120, ry:60, fill:color, opacity:.95}); const neck=el('rect',{x:-40, y:560, width:80, height:28, rx:14, fill:color}); grp.appendChild(body); grp.appendChild(neck); return grp; }
+    function vaseTall(color='#ffd1dc'){ const grp=g({ 'data-type':'vase' }); const body=el('rect',{x:-60,y:520,width:120,height:120,rx:26,fill:color,opacity:.95}); const neck=el('rect',{x:-30,y:560,width:60,height:24,rx:12,fill:color}); grp.appendChild(body); grp.appendChild(neck); return grp; }
+    function vaseHeart(color='#ffd1dc'){ const grp=g({ 'data-type':'vase' }); const path=el('path',{d:'M0,640 C-70,600 -120,560 -100,520 C-86,492 -52,490 -30,512 C-10,532 0,548 0,548 C0,548 10,532 30,512 C52,490 86,492 100,520 C120,560 70,600 0,640 Z', fill:color, opacity:.95}); grp.appendChild(path); return grp; }
+
+    const FLOWERS = [
+      {name:'Rose', make:rose},
+      {name:'Lily', make:lily},
+      {name:'Tulip', make:tulip},
+      {name:'Daisy', make:daisy},
+      {name:'Greenery', make:greenery}
+    ];
+
+    // DOM
+    const stage = document.getElementById('stage');
+    const stemsLayer = document.getElementById('stems');
+    const flowersLayer = document.getElementById('flowers');
+    const vaseLayer = document.getElementById('vaseLayer');
+    const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+
+    const paletteEl = document.getElementById('palette');
+    const petalPicker = document.getElementById('petalColor');
+    const centerPicker = document.getElementById('centerColor');
+    const vaseStyleSel = document.getElementById('vaseStyle');
+    const vaseColorInput = document.getElementById('vaseColor');
+
+    // Palette UI
+    for(const f of FLOWERS){
+      const card = document.createElement('div'); card.className='card';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('viewBox','-80 -80 160 160');
+      svg.appendChild(f.make());
+      const btn = document.createElement('button'); btn.className='btn'; btn.textContent = 'Add '+f.name;
+      btn.addEventListener('click', ()=> addFlower(f.name));
+      const label = document.createElement('div'); label.className='small'; label.textContent = f.name;
+      card.appendChild(svg); card.appendChild(btn); card.appendChild(label); paletteEl.appendChild(card);
+    }
+
+    // State
+    let state = { items: [], vase:{style:'round', color:'#ffd1dc'} };
+    let selected = null; // id
+    let undoStack = [], redoStack = [];
+
+    function snapshot(){ const data = JSON.stringify(state); undoStack.push(data); if(undoStack.length>120) undoStack.shift(); redoStack.length=0; }
+
+    // Vase rendering
+    function renderVase(){
+      vaseLayer.innerHTML = '';
+      const color = state.vase.color; const style = state.vase.style;
+      const maker = style==='tall'?vaseTall : style==='heart'?vaseHeart : vaseRound;
+      vaseLayer.appendChild(maker(color));
+    }
+    vaseStyleSel.addEventListener('change', ()=>{ state.vase.style = vaseStyleSel.value; renderVase();});
+    vaseColorInput.addEventListener('input', ()=>{ state.vase.color = vaseColorInput.value; renderVase();});
+
+    // Add ribbon
+    document.getElementById('addRibbon').addEventListener('click', ()=>{ snapshot(); const id=uid(); state.items.push({id,type:'ribbon',x:500,y:560,r:0,s:1,z:Date.now(), color:'#ff99cc'}); render(); select(id); });
+
+    // Add flowers
+    function addFlower(kind){
+      snapshot();
+      const id = uid();
+      const x = 500 + (Math.random()*120-60); const y = 440 + (Math.random()*40-20);
+      const r = (Math.random()*30-15); const s = 1;
+      const pc = '#ff9ccf', cc='#ffe680';
+      state.items.push({ id, type:kind, x, y, r, s, z:Date.now(), petal:pc, center:cc });
+      render(); select(id);
+    }
+
+    function buildNode(it){
+      const map = { Rose:rose, Lily:lily, Tulip:tulip, Daisy:daisy, Greenery:greenery, ribbon:ribbon };
+      const make = map[it.type] || daisy;
+      const node = (it.type==='ribbon')? make(it.color) : make(it.petal, it.center);
+      node.setAttribute('data-id', it.id);
+      node.setAttribute('transform', `translate(${it.x} ${it.y}) rotate(${it.r}) scale(${it.s})`);
+      node.style.cursor='grab';
+      node.addEventListener('pointerdown', pointerDown, {passive:false});
+      return node;
+    }
+
+    function render(){
+      renderVase();
+      stemsLayer.innerHTML='';
+      flowersLayer.innerHTML='';
+      const ordered = [...state.items].sort((a,b)=> a.z - b.z);
+      for(const it of ordered){
+        if(['Rose','Lily','Tulip','Daisy','Greenery'].includes(it.type)){
+          const st = el('path',{ d:`M${it.x},${it.y} C${it.x-10},${it.y+60} ${it.x-8},${it.y+120} ${it.x},640`, stroke:'#7ecb85', 'stroke-width':3, fill:'none' });
+          stemsLayer.appendChild(st);
+        }
+        flowersLayer.appendChild(buildNode(it));
+      }
+      drawOverlay();
+      statusEl.textContent = `status: ${state.items.length} items • selected: ${selected||'none'}`;
+    }
+
+    function findItem(id){ return state.items.find(x=>x.id===id); }
+    function select(id){ selected = id; drawOverlay(); updatePickers(); }
+
+    function updatePickers(){ const it = findItem(selected); if(!it) return; if(['Rose','Lily','Tulip','Daisy'].includes(it.type)){ petalPicker.value = it.petal || '#ff99cc'; centerPicker.value = it.center || '#ffe680'; } }
+
+    // recolor selected flower
+    petalPicker.addEventListener('input', ()=>{ const it=findItem(selected); if(!it) return; if(!['Rose','Lily','Tulip','Daisy'].includes(it.type)) return; it.petal = petalPicker.value; snapshot(); render(); });
+    centerPicker.addEventListener('input', ()=>{ const it=findItem(selected); if(!it) return; if(!['Rose','Lily','Tulip','Daisy'].includes(it.type)) return; it.center = centerPicker.value; snapshot(); render(); });
+
+    // Selection overlay
+    function drawOverlay(){
+      overlay.innerHTML=''; if(!selected) return;
+      const node = flowersLayer.querySelector(`[data-id="${selected}"]`); if(!node) return;
+      const bb = node.getBBox(); const t = node.getCTM();
+      const pts=[ new DOMPoint(bb.x,bb.y).matrixTransform(t), new DOMPoint(bb.x+bb.width,bb.y).matrixTransform(t), new DOMPoint(bb.x+bb.width,bb.y+bb.height).matrixTransform(t), new DOMPoint(bb.x,bb.y+bb.height).matrixTransform(t) ];
+      const minx=Math.min(...pts.map(p=>p.x)), miny=Math.min(...pts.map(p=>p.y)); const maxx=Math.max(...pts.map(p=>p.x)), maxy=Math.max(...pts.map(p=>p.y));
+      overlay.appendChild(el('rect',{x:minx,y:miny,width:maxx-minx,height:maxy-miny,class:'selbox'}));
+      [[minx,miny],[maxx,miny],[maxx,maxy],[minx,maxy]].forEach(([hx,hy])=> overlay.appendChild(el('rect',{x:hx-5,y:hy-5,width:10,height:10,class:'handle'})) );
+    }
+
+    // ===== Drag & drop — robust drop‑fix
+    let isDragging=false, activePointerId=null;
+    function pointerDown(e){
+      e.preventDefault();
+      const elNode = e.currentTarget;
+      const id = elNode.getAttribute('data-id');
+      select(id);
+      const it = findItem(id); if(!it) return;
+      activePointerId = e.pointerId; isDragging=true;
+      try{ elNode.setPointerCapture(activePointerId); }catch(_){}
+      elNode.style.cursor='grabbing';
+      const off = { dx: it.x - clientToSvgX(e.clientX), dy: it.y - clientToSvgY(e.clientY) };
+
+      function onMove(ev){
+        if(!isDragging || ev.pointerId!==activePointerId) return;
+        ev.preventDefault();
+        it.x = clientToSvgX(ev.clientX) + off.dx;
+        it.y = clientToSvgY(ev.clientY) + off.dy;
+        updateNode(it); drawOverlay(); renderStems();
+      }
+      function finish(){
+        try{ elNode.releasePointerCapture(activePointerId); }catch(_){ }
+        elNode.style.cursor='grab'; isDragging=false; activePointerId=null;
+        window.removeEventListener('pointermove', onMove, {passive:false});
+        window.removeEventListener('pointerup', onUp, {passive:false});
+        window.removeEventListener('pointercancel', onCancel, {passive:false});
+        snapshot();
+      }
+      function onUp(ev){ if(ev.pointerId!==activePointerId) return; finish(); }
+      function onCancel(ev){ if(ev.pointerId!==activePointerId) return; finish(); }
+
+      window.addEventListener('pointermove', onMove, {passive:false});
+      window.addEventListener('pointerup', onUp, {passive:false});
+      window.addEventListener('pointercancel', onCancel, {passive:false});
+      elNode.addEventListener('lostpointercapture', finish, {once:true});
+    }
+
+    function clientToSvgX(cx){ const pt = stage.createSVGPoint(); pt.x=cx; pt.y=0; return pt.matrixTransform(stage.getScreenCTM().inverse()).x; }
+    function clientToSvgY(cy){ const pt = stage.createSVGPoint(); pt.x=0; pt.y=cy; return pt.matrixTransform(stage.getScreenCTM().inverse()).y; }
+    function updateNode(it){ const node = flowersLayer.querySelector(`[data-id="${it.id}"]`); if(node) node.setAttribute('transform', `translate(${it.x} ${it.y}) rotate(${it.r}) scale(${it.s})`); }
+
+    function renderStems(){
+      stemsLayer.innerHTML='';
+      for(const each of state.items){ if(['Rose','Lily','Tulip','Daisy','Greenery'].includes(each.type)){
+        const st = el('path',{ d:`M${each.x},${each.y} C${each.x-10},${each.y+60} ${each.x-8},${each.y+120} ${each.x},640`, stroke:'#7ecb85', 'stroke-width':3, fill:'none' });
+        stemsLayer.appendChild(st);
+      } }
+    }
+
+    // Wheel modifiers
+    stage.addEventListener('wheel', (e)=>{
+      if(!selected) return; const it=findItem(selected); if(!it) return;
+      if(e.shiftKey){ it.r = (it.r + (e.deltaY>0?6:-6)) % 360; updateNode(it); drawOverlay(); e.preventDefault(); }
+      else if(e.altKey){ it.s = clamp(it.s + (e.deltaY>0?-0.05:0.05), 0.4, 2.2); updateNode(it); drawOverlay(); e.preventDefault(); }
+    }, {passive:false});
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e)=>{
+      if(!selected) return; const it=findItem(selected); if(!it) return;
+      const step = e.shiftKey? 10 : 3; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+      if(e.key==='ArrowUp'){ it.y -= step; }
+      if(e.key==='ArrowDown'){ it.y += step; }
+      if(e.key==='ArrowLeft'){ it.x -= step; }
+      if(e.key==='ArrowRight'){ it.x += step; }
+      if(e.key==='Delete' || e.key==='Backspace'){ delSelected(); return; }
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ undo(); return; }
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='y'){ redo(); return; }
+      updateNode(it); drawOverlay(); renderStems();
+    });
+
+    // Toolbar actions
+    document.getElementById('undo').onclick = undo;
+    document.getElementById('redo').onclick = redo;
+    document.getElementById('dup').onclick = ()=>{ if(!selected) return; const it=findItem(selected); snapshot(); const copy={...it,id:uid(),x:it.x+24,y:it.y-10,z:Date.now()}; state.items.push(copy); render(); select(copy.id); };
+    document.getElementById('front').onclick = ()=>{ if(!selected) return; const it=findItem(selected); snapshot(); it.z=Date.now(); render(); };
+    document.getElementById('back').onclick = ()=>{ if(!selected) return; const it=findItem(selected); snapshot(); it.z=0; render(); };
+    document.getElementById('del').onclick = delSelected;
+
+    // Auto arrange (spiral)
+    document.getElementById('auto').onclick = ()=>{
+      snapshot(); const cx=500, cy=420; let a=0, r=6;
+      const sorted = state.items.filter(i=>['Rose','Lily','Tulip','Daisy'].includes(i.type)).sort((a,b)=>a.z-b.z);
+      for(const it of sorted){ it.x = cx + Math.cos(a)*r; it.y = cy + Math.sin(a)*r; it.r = (a*180/Math.PI)%360; it.s = 0.9 + (r%30)/120; a += 0.45; r += 10; }
+      render();
+    };
+
+    function delSelected(){ if(!selected) return; snapshot(); state.items = state.items.filter(x=>x.id!==selected); selected=null; render(); }
+
+    function undo(){ if(!undoStack.length) return; const cur=JSON.stringify(state); redoStack.push(cur); const prev=undoStack.pop(); state=JSON.parse(prev); selected=null; render(); }
+    function redo(){ if(!redoStack.length) return; const cur=JSON.stringify(state); undoStack.push(cur); const next=redoStack.pop(); state=JSON.parse(next); selected=null; render(); }
+
+    // Save/Load JSON
+    document.getElementById('saveBtn').addEventListener('click', ()=>{ const data = JSON.stringify(state, null, 2); const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'riya_bouquet.json'; a.click(); });
+    const loadFile = document.getElementById('loadFile');
+    document.getElementById('loadBtn').addEventListener('click', ()=> loadFile.click());
+    loadFile.addEventListener('change', async ()=>{ const f = loadFile.files[0]; if(!f) return; const txt = await f.text(); try{ state = JSON.parse(txt); selected=null; render(); statusEl.textContent='status: bouquet loaded'; vaseStyleSel.value = state.vase.style || 'round'; vaseColorInput.value = state.vase.color || '#ffd1dc'; } catch{ statusEl.textContent='status: invalid file'; }
+    });
+
+    // Export PNG
+    document.getElementById('exportBtn').addEventListener('click', async ()=>{
+      const clone = stage.cloneNode(true);
+      const ov = clone.querySelector('#overlay'); if (ov) ov.remove();
+      const data = new XMLSerializer().serializeToString(clone);
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+      const img = new Image();
+      img.onload = ()=>{ const canvas = document.createElement('canvas'); canvas.width = 1000; canvas.height = 700; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); const png = canvas.toDataURL('image/png'); const a = document.createElement('a'); a.href = png; a.download = 'riya_bouquet.png'; a.click(); };
+      img.src = url;
+    });
+
+    // Init
+    function init(){
+      state.vase = {style:'round', color:'#ffd1dc'};
+      vaseStyleSel.value = state.vase.style; vaseColorInput.value = state.vase.color;
+      state.items = [
+        {id:uid(), type:'Rose', x:460, y:430, r:-10, s:1, z:1, petal:'#ff9ccf', center:'#ffe680'},
+        {id:uid(), type:'Lily', x:520, y:420, r:8, s:1, z:2, petal:'#ffd1e6', center:'#ffe680'},
+        {id:uid(), type:'Tulip', x:500, y:440, r:0, s:1, z:3, petal:'#ff8fb8', center:'#ffe680'},
+        {id:uid(), type:'Daisy', x:540, y:450, r:12, s:1, z:4, petal:'#ffffff', center:'#ffc94d'}
+      ];
+      render();
+      dbg('ready (drop‑fix on)');
+    }
+
+    init();
+  </script>
+</body>
+</html>

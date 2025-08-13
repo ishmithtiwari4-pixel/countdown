@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Riya — Organization Puzzle</title>
+  <meta name="description" content="Calm, cozy A‑Little‑to‑the‑Left style puzzles: drag items into tidy spots. Works offline. Pink lilies & roses vibe." />
+  <style>
+    :root{ --bg:#0f0a12; --ink:#fff7fb; --muted:#eacfe3; --pink2:#ffb3d6; --lilac:#a78bfa; --rose:#ff6fa8; --shadow:rgba(0,0,0,.35); --radius:20px; --accent:#ff9ccf; --ok:#7ae582; --warn:#ffd166 }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--ink);background:
+      radial-gradient(1200px 800px at 10% 120%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(1200px 800px at 80% -10%, rgba(255,143,184,.18), transparent 55%),
+      linear-gradient(180deg, #130c19 0%, #0f0a12 100%);
+    }
+    .wrap{width:min(1280px,95vw);margin-inline:auto}
+    header.nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(12px);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border-bottom:1px solid rgba(255,255,255,.12)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lilac));box-shadow:0 6px 20px var(--shadow);position:relative;overflow:hidden}
+    .brand .logo:before{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.65), rgba(255,255,255,0) 40%)}
+    nav ul{display:flex;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;border:1px solid transparent}
+    nav a:hover, nav a[aria-current="page"]{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+
+    .layout{display:grid;grid-template-columns: 300px 1fr; gap:16px; padding:18px}
+    @media (max-width:980px){ .layout{ grid-template-columns: 1fr; } }
+
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px;box-shadow:0 14px 40px var(--shadow)}
+    .panel h2{margin:0 0 10px;font-size:18px}
+    .small{font-size:12px;color:var(--muted)}
+    .btn{appearance:none;border:0;cursor:pointer;border-radius:10px;padding:8px 10px;background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#160c23;font-weight:700}
+    .btn.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);font-weight:600}
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    select, input[type="checkbox"]{height:32px;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.1);color:#fff;padding:0 8px}
+
+    .stage-wrap{position:relative}
+    .toolbar{position:absolute;left:10px;top:10px;display:flex;gap:8px;z-index:20}
+    .tool{padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+    .tool:hover{background:rgba(255,255,255,.1)}
+
+    .stage{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);box-shadow:0 14px 40px var(--shadow);overflow:hidden; touch-action:none; user-select:none}
+    .status{margin-top:8px;color:#9fb0d8;font-size:12px}
+
+    .overlay{pointer-events:none}
+    .selbox{fill:transparent;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 6}
+    .handle{fill:#fff;stroke:#333;stroke-width:1}
+
+    .hint{opacity:.45}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:10px 14px;border-radius:999px;backdrop-filter:blur(8px);box-shadow:0 10px 30px var(--shadow);z-index:80}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><div class="logo" aria-hidden="true"></div> <span>For Riya</span></div>
+      <nav>
+        <ul>
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../gallery.html">Riya Gallery</a></li>
+          <li><a href="decorator.html">Room Decorator</a></li>
+          <li><a href="bouquet.html">Build‑a‑Bouquet</a></li>
+          <li><a href="organize.html" aria-current="page">Organization Puzzle</a></li>
+          <li><a href="avatar.html">Character Creator</a></li>
+          <li><a href="../day.html">Image & Message</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <aside class="panel">
+      <h2>Organization Puzzle</h2>
+      <div class="row"><label>Level</label>
+        <select id="levelSel"></select>
+      </div>
+      <div class="row">
+        <button class="btn" id="reset">Reset level</button>
+        <button class="btn ghost" id="hint">Show hint</button>
+      </div>
+      <div class="row small">Drag items into the tidy spots. Near a correct spot? It snaps in with a ✨.</div>
+      <div class="row small">Rotate: <b>Shift + wheel</b> • Nudge: <b>arrow keys</b> • Undo/Redo: <b>Ctrl/⌘+Z / Ctrl/⌘+Y</b></div>
+      <div class="status" id="status">status: ready</div>
+    </aside>
+
+    <section class="stage-wrap">
+      <div class="toolbar">
+        <button class="tool" id="undo">⟲ Undo</button>
+        <button class="tool" id="redo">⟳ Redo</button>
+        <button class="tool" id="shuffle">⤿ Shuffle</button>
+        <button class="tool" id="next">⮕ Next Level</button>
+      </div>
+      <svg id="stage" class="stage" width="100%" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" aria-label="Organize canvas" role="group">
+        <defs>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="rgba(0,0,0,.35)"/></filter>
+        </defs>
+        <rect x="0" y="0" width="1000" height="700" fill="transparent" />
+        <g id="bg"></g>
+        <g id="targets" class="hint hidden"></g>
+        <g id="items" filter="url(#shadow)"></g>
+        <g id="overlay" class="overlay"></g>
+      </svg>
+    </section>
+  </main>
+
+  <div class="toast hidden" id="toast">Perfect! All tidy ✨</div>
+
+  <script>
+    // ===== Helpers
+    const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+    const uid=()=> 'id'+Math.random().toString(36).slice(2,9);
+    const dist=(ax,ay,bx,by)=> Math.hypot(ax-bx, ay-by);
+    const setHidden=(el,flag)=> el.classList.toggle('hidden', !!flag);
+
+    // SVG
+    const NS='http://www.w3.org/2000/svg';
+    const el=(tag,attrs={})=>{ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+    const g=(attrs={}, kids=[])=>{ const e=el('g',attrs); kids.forEach(k=> e.appendChild(k)); return e; };
+
+    // Simple shapes
+    function book(color='#ffd1dc', h=120){
+      const grp=g({'data-type':'book'});
+      grp.appendChild(el('rect',{x:-20,y:-h,width:40,height:h,rx:6,fill:color,stroke:'#000','stroke-opacity':.08}));
+      grp.appendChild(el('rect',{x:-22,y:-h-4,width:44,height:8,rx:3,fill:'#fff',opacity:.45}));
+      return grp;
+    }
+    function note(color='#fff7b0'){
+      const grp=g({'data-type':'note'});
+      grp.appendChild(el('rect',{x:-40,y:-40,width:80,height:80,rx:6,fill:color,stroke:'#000','stroke-opacity':.06}));
+      grp.appendChild(el('path',{d:'M40,-40 l-16,0 0,16 z', fill:'#fff', opacity:.5}));
+      return grp;
+    }
+    function pen(){
+      const grp=g({'data-type':'pen'});
+      grp.appendChild(el('rect',{x:-90,y:-6,width:180,height:12,rx:6,fill:'#5db2ff'}));
+      grp.appendChild(el('rect',{x:84,y:-6,width:20,height:12,rx:6,fill:'#2a7bc4'}));
+      return grp;
+    }
+    function tape(){ const grp=g({'data-type':'tape'}); grp.appendChild(el('circle',{cx:0,cy:0,r:34,fill:'#ffe3a1'})); grp.appendChild(el('circle',{cx:0,cy:0,r:14,fill:'#fff'})); return grp; }
+    function phone(){ const grp=g({'data-type':'phone'}); grp.appendChild(el('rect',{x:-40,y:-70,width:80,height:140,rx:18,fill:'#222'})); grp.appendChild(el('rect',{x:-32,y:-58,width:64,height:116,rx:10,fill:'#111'})); grp.appendChild(el('circle',{cx:0,cy:62,r:6,fill:'#444'})); return grp; }
+    function cup(){ const grp=g({'data-type':'cup'}); grp.appendChild(el('rect',{x:-30,y:-34,width:60,height:68,rx:12,fill:'#ffd1dc'})); grp.appendChild(el('circle',{cx:36,cy:0,r:16,fill:'none',stroke:'#ffd1dc','stroke-width':8})); return grp; }
+    function spoon(){ const grp=g({'data-type':'spoon'}); grp.appendChild(el('ellipse',{cx:80,cy:0,rx:18,ry:12,fill:'#c8c9d3'})); grp.appendChild(el('rect',{x:-80,y:-4,width:150,height:8,rx:4,fill:'#d8d9e3'})); return grp; }
+
+    // Level definitions
+    const LEVELS=[
+      {
+        id:'bookshelf', name:'Bookshelf — sort by height (left→right)',
+        bg:()=>{
+          const shelf=el('rect',{x:120,y:480,width:760,height:18,rx:4,fill:'#c79a6d'});
+          const back=el('rect',{x:80,y:120,width:840,height:380,rx:16,fill:'rgba(255,255,255,.04)',stroke:'rgba(255,255,255,.12)'});
+          return g({},[back,shelf]);
+        },
+        items:[
+          {kind:'book', color:'#ffd1dc', h:90,  target:{x:220,y:480,r:0}},
+          {kind:'book', color:'#ffb3d6', h:110, target:{x:300,y:480,r:0}},
+          {kind:'book', color:'#ffa2c2', h:130, target:{x:380,y:480,r:0}},
+          {kind:'book', color:'#d7b3ff', h:150, target:{x:460,y:480,r:0}},
+          {kind:'book', color:'#c9a5ff', h:170, target:{x:540,y:480,r:0}},
+          {kind:'book', color:'#a78bfa', h:190, target:{x:620,y:480,r:0}},
+        ],
+        tolerance:16
+      },
+      {
+        id:'drawer', name:'Desk Drawer — place items in compartments',
+        bg:()=>{
+          const tray=el('rect',{x:150,y:180,width:700,height:360,rx:20,fill:'rgba(255,255,255,.06)',stroke:'rgba(255,255,255,.16)'});
+          // compartments
+          const lines=[
+            el('rect',{x:150,y:300,width:700,height:4,fill:'rgba(255,255,255,.18)'}),
+            el('rect',{x:450,y:180,width:4,height:360,fill:'rgba(255,255,255,.18)'}),
+            el('rect',{x:700,y:300,width:4,height:240,fill:'rgba(255,255,255,.18)'})
+          ];
+          return g({},[tray,...lines]);
+        },
+        items:[
+          {kind:'pen',   target:{x:300,y:240,r:0}},
+          {kind:'tape',  target:{x:550,y:240,r:0}},
+          {kind:'note',  target:{x:830-100,y:240,r:0}},
+          {kind:'phone', target:{x:300,y:420,r:0}},
+          {kind:'cup',   target:{x:550,y:420,r:0}},
+          {kind:'spoon', target:{x:820,y:420,r:0}},
+        ],
+        tolerance:18
+      },
+      {
+        id:'tea', name:'Tea Tray — align handles and spoons',
+        bg:()=>{
+          const mat=el('rect',{x:160,y:220,width:680,height:260,rx:30,fill:'rgba(255,255,255,.05)',stroke:'rgba(255,255,255,.14)'});
+          const stripe=el('rect',{x:160,y:350,width:680,height:12,fill:'rgba(255,255,255,.08)'});
+          return g({},[mat,stripe]);
+        },
+        items:[
+          {kind:'cup',   target:{x:300,y:290,r:0}},
+          {kind:'cup',   target:{x:500,y:290,r:0}},
+          {kind:'cup',   target:{x:700,y:290,r:0}},
+          {kind:'spoon', target:{x:300,y:410,r:0}},
+          {kind:'spoon', target:{x:500,y:410,r:0}},
+          {kind:'spoon', target:{x:700,y:410,r:0}},
+        ],
+        tolerance:16
+      }
+    ];
+
+    // DOM
+    const stage=document.getElementById('stage');
+    const bgLayer=document.getElementById('bg');
+    const targetsLayer=document.getElementById('targets');
+    const itemsLayer=document.getElementById('items');
+    const overlay=document.getElementById('overlay');
+    const statusEl=document.getElementById('status');
+    const toast=document.getElementById('toast');
+
+    const levelSel=document.getElementById('levelSel');
+    const btnReset=document.getElementById('reset');
+    const btnHint=document.getElementById('hint');
+    const btnUndo=document.getElementById('undo');
+    const btnRedo=document.getElementById('redo');
+    const btnShuffle=document.getElementById('shuffle');
+    const btnNext=document.getElementById('next');
+
+    // Populate level select
+    LEVELS.forEach((L,i)=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=L.name; levelSel.appendChild(opt); });
+
+    // State
+    let cur=0; // level index
+    let state={ items:[], placed:0, history:[], redo:[] };
+    const pushSnap=()=>{ try{ state.history.push(JSON.stringify(state.items)); if(state.history.length>80) state.history.shift(); state.redo.length=0; }catch(e){} };
+
+    function loadLevel(i){ cur=i; levelSel.value=String(i); const L=LEVELS[cur];
+      // bg
+      bgLayer.innerHTML=''; bgLayer.appendChild(L.bg());
+      // targets (hint only)
+      targetsLayer.innerHTML='';
+      for(const spec of L.items){ const t=spec.target; const ghost = makeItem(spec); ghost.setAttribute('transform', `translate(${t.x} ${t.y}) rotate(${t.r||0})`); targetsLayer.appendChild(ghost); }
+      // items (randomized)
+      state.items = L.items.map(spec=>({ id:uid(), spec, x: 150+Math.random()*700, y: 120+Math.random()*440, r: (Math.random()*30-15)|0, s: 1, locked:false }));
+      state.placed = 0; state.history=[]; state.redo=[]; pushSnap();
+      render(); setHidden(toast, true); setHint(false);
+    }
+
+    function makeItem(spec){
+      switch(spec.kind){
+        case 'book': return book(spec.color, spec.h);
+        case 'pen': return pen();
+        case 'tape': return tape();
+        case 'note': return note();
+        case 'phone': return phone();
+        case 'cup': return cup();
+        case 'spoon': return spoon();
+        default: return note();
+      }
+    }
+
+    function buildNode(it){
+      const node = makeItem(it.spec);
+      node.setAttribute('data-id', it.id);
+      node.style.cursor = it.locked? 'default' : 'grab';
+      node.setAttribute('transform', `translate(${it.x} ${it.y}) rotate(${it.r}) scale(${it.s||1})`);
+      if(!it.locked) node.addEventListener('pointerdown', onPointerDown, {passive:false});
+      return node;
+    }
+
+    function render(){ itemsLayer.innerHTML=''; const ordered=[...state.items].sort((a,b)=> (a.locked?1:0) - (b.locked?1:0)); ordered.forEach(it=> itemsLayer.appendChild(buildNode(it))); drawOverlay(); updateStatus(); }
+
+    function updateStatus(){ const L=LEVELS[cur]; statusEl.textContent = `level: ${L.name} • placed ${state.items.filter(i=>i.locked).length}/${L.items.length}` }
+
+    function setHint(on){ targetsLayer.setAttribute('class', 'hint'+(on?'':' hidden')); btnHint.textContent = on? 'Hide hint' : 'Show hint'; }
+
+    function nearTarget(it){ const t=it.spec.target; return dist(it.x,it.y,t.x,t.y) <= (LEVELS[cur].tolerance||16) && Math.abs((it.r||0)-(t.r||0)) <= 8; }
+
+    // Drag & drop with robust release
+    let dragging=null; // {id, offx, offy, pid}
+    function onPointerDown(e){
+      e.preventDefault();
+      const node=e.currentTarget; const id=node.getAttribute('data-id'); const it=state.items.find(x=>x.id===id); if(!it||it.locked) return;
+      dragging={ id, offx: it.x - clientToSvgX(e.clientX), offy: it.y - clientToSvgY(e.clientY), pid:e.pointerId };
+      try{ node.setPointerCapture(e.pointerId); }catch(_){ }
+      node.style.cursor='grabbing';
+      window.addEventListener('pointermove', onPointerMove, {passive:false});
+      window.addEventListener('pointerup', onPointerUp, {passive:false});
+      window.addEventListener('pointercancel', onPointerCancel, {passive:false});
+      node.addEventListener('lostpointercapture', onPointerLost, {once:true});
+    }
+    function onPointerMove(e){ if(!dragging || e.pointerId!==dragging.pid) return; e.preventDefault(); const it=state.items.find(x=>x.id===dragging.id); if(!it) return; it.x = clientToSvgX(e.clientX)+dragging.offx; it.y = clientToSvgY(e.clientY)+dragging.offy; updateNode(it); drawOverlay(); }
+    function finishDrag(){ if(!dragging) return; const it=state.items.find(x=>x.id===dragging.id); if(it){
+        // Snap if near target
+        if(nearTarget(it)){ const t=it.spec.target; it.x=t.x; it.y=t.y; it.r=t.r||0; it.locked=true; toastBlink('Snapped ✨'); }
+        updateNode(it); drawOverlay(); render(); checkWin(); pushSnap();
+      }
+      dragging=null;
+    }
+    function onPointerUp(e){ if(!dragging || e.pointerId!==dragging.pid) return; finishDrag(); }
+    function onPointerCancel(e){ if(!dragging || e.pointerId!==dragging.pid) return; finishDrag(); }
+    function onPointerLost(){ finishDrag(); }
+
+    function clientToSvgX(cx){ const pt=stage.createSVGPoint(); pt.x=cx; pt.y=0; return pt.matrixTransform(stage.getScreenCTM().inverse()).x; }
+    function clientToSvgY(cy){ const pt=stage.createSVGPoint(); pt.x=0; pt.y=cy; return pt.matrixTransform(stage.getScreenCTM().inverse()).y; }
+    function updateNode(it){ const node = itemsLayer.querySelector(`[data-id="${it.id}"]`); if(node) node.setAttribute('transform', `translate(${it.x} ${it.y}) rotate(${it.r||0}) scale(${it.s||1})`); }
+
+    // Selection overlay (for keyboard nudging)
+    let selected=null;
+    function drawOverlay(){ overlay.innerHTML=''; if(!selected) return; const node = itemsLayer.querySelector(`[data-id="${selected}"]`); if(!node) return; const bb=node.getBBox(); const t=node.getCTM(); const pts=[new DOMPoint(bb.x,bb.y).matrixTransform(t), new DOMPoint(bb.x+bb.width,bb.y).matrixTransform(t), new DOMPoint(bb.x+bb.width,bb.y+bb.height).matrixTransform(t), new DOMPoint(bb.x,bb.y+bb.height).matrixTransform(t)]; const minx=Math.min(...pts.map(p=>p.x)), miny=Math.min(...pts.map(p=>p.y)); const maxx=Math.max(...pts.map(p=>p.x)), maxy=Math.max(...pts.map(p=>p.y)); overlay.appendChild(el('rect',{x:minx,y:miny,width:maxx-minx,height:maxy-miny,class:'selbox'})); [[minx,miny],[maxx,miny],[maxx,maxy],[minx,maxy]].forEach(([hx,hy])=> overlay.appendChild(el('rect',{x:hx-5,y:hy-5,width:10,height:10,class:'handle'}))); }
+
+    // Click select
+    itemsLayer.addEventListener('pointerdown', (e)=>{ const n=e.target.closest('[data-id]'); if(!n) return; selected=n.getAttribute('data-id'); drawOverlay(); });
+
+    // Keyboard nudge & rotate
+    window.addEventListener('keydown', (e)=>{
+      if(!selected) return; const it=state.items.find(x=>x.id===selected); if(!it || it.locked) return;
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+      const step=e.shiftKey?10:3;
+      if(e.key==='ArrowUp') it.y-=step;
+      if(e.key==='ArrowDown') it.y+=step;
+      if(e.key==='ArrowLeft') it.x-=step;
+      if(e.key==='ArrowRight') it.x+=step;
+      updateNode(it); drawOverlay();
+    });
+
+    // Wheel rotate (Shift)
+    stage.addEventListener('wheel', (e)=>{ if(!selected) return; const it=state.items.find(x=>x.id===selected); if(!it || it.locked) return; if(e.shiftKey){ e.preventDefault(); it.r=(it.r||0)+(e.deltaY>0?6:-6); updateNode(it); drawOverlay(); } }, {passive:false});
+
+    // Undo/redo
+    btnUndo.onclick=()=>{ if(!state.history.length) return; const curSnap=JSON.stringify(state.items); state.redo.push(curSnap); const prev=state.history.pop(); state.items=JSON.parse(prev); render(); };
+    btnRedo.onclick=()=>{ if(!state.redo.length) return; const curSnap=JSON.stringify(state.items); state.history.push(curSnap); const next=state.redo.pop(); state.items=JSON.parse(next); render(); };
+
+    // Controls
+    btnReset.onclick=()=> loadLevel(cur);
+    btnShuffle.onclick=()=>{ for(const it of state.items){ it.x = 120+Math.random()*760; it.y = 120+Math.random()*440; it.r=(Math.random()*30-15)|0; it.locked=false; } render(); pushSnap(); setHidden(toast,true); };
+    btnHint.onclick=()=> setHint(targetsLayer.classList.contains('hidden'));
+    btnNext.onclick=()=>{ const next=(cur+1)%LEVELS.length; loadLevel(next); };
+    levelSel.addEventListener('change', ()=> loadLevel(+levelSel.value));
+
+    function checkWin(){ const all=state.items.every(it=> it.locked); if(all){ toastBlink('Perfect! All tidy ✨'); }
+      setHidden(toast, !all);
+    }
+
+    function toastBlink(msg){ toast.textContent=msg; setHidden(toast,false); toast.animate([{transform:'translateX(-50%) scale(1)'},{transform:'translateX(-50%) scale(1.04)'},{transform:'translateX(-50%) scale(1)'}],{duration:500}); setTimeout(()=> setHidden(toast,true), 1600); }
+
+    // Init
+    loadLevel(0);
+  </script>
+</body>
+</html>
